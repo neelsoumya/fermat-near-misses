@@ -5,7 +5,9 @@ An interactive web page that shows how close whole numbers can come to solving
 Theorem (proved by Wiles and Taylor in 1995) says there are no exact solutions
 for n ≥ 3.
 
-**Live page:** `[https://<your-username>.github.io/<repository-name>/](https://neelsoumya.github.io/fermat-near-misses/)`
+**Live page:** `[[https://<your-username>.github.io/<repository-name>/](https://neelsoumya.github.io/fermat-near-misses/)]`
+
+- [Link](https://neelsoumya.github.io/fermat-near-misses/)
 
 ![Best near misses as z grows](assets/near_miss_magnitude.png)
 
