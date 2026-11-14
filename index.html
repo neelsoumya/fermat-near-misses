@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>So close to Fermat’s Last Theorem</title>
+<meta name="description" content="An interactive page showing how close whole numbers can get to solving Fermat’s Last Theorem.">
+<style>
+:root{--bg:#eef2f6;--paper:#fbfcfe;--ink:#14213d;--mute:#52627a;--line:#cfd8e3;--data:#0f766e;--hit:#b45309;--btn:#14213d;--btnt:#fbfcfe;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){color-scheme:dark;--bg:#0e1621;--paper:#16212f;--ink:#e6edf5;--mute:#9db0c7;--line:#2b3a4e;--data:#5eead4;--hit:#fbbf24;--btn:#e6edf5;--btnt:#0e1621}}
+:root[data-theme="dark"]{color-scheme:dark;--bg:#0e1621;--paper:#16212f;--ink:#e6edf5;--mute:#9db0c7;--line:#2b3a4e;--data:#5eead4;--hit:#fbbf24;--btn:#e6edf5;--btnt:#0e1621}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;font-variant-numeric:tabular-nums}
+main{max-width:860px;margin:0 auto;padding:28px 18px 60px}
+h1{font:700 clamp(2rem,6vw,3.2rem)/1.1 Georgia,"Iowan Old Style",serif;margin:.2em 0 .3em;letter-spacing:-.01em}
+h2{font:700 1.5rem/1.25 Georgia,"Iowan Old Style",serif;margin:2.2em 0 .4em}
+p{max-width:66ch;margin:.6em 0}
+.lede{font-size:1.15rem;color:var(--mute)}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:10px;padding:18px;margin:16px 0}
+.eq{font:600 clamp(1.4rem,5vw,2.3rem)/1.3 Georgia,serif}
+.miss{color:var(--hit)}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:10px 0}
+label{display:flex;flex-direction:column;font-size:.9rem;color:var(--mute);gap:4px}
+input[type=number]{width:7.5em;padding:8px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit}
+button{font:inherit;cursor:pointer;border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:8px 13px;border-radius:6px}
+button.go,button.on{background:var(--btn);color:var(--btnt);border-color:var(--btn)}
+button:focus-visible,input:focus-visible{outline:3px solid var(--data);outline-offset:2px}
+#out{margin-top:12px;min-height:5em}
+.big{font:600 1.25rem/1.4 Georgia,serif}
+.seg{display:inline-flex;gap:6px;flex-wrap:wrap}
+canvas{width:100%;height:340px;display:block;background:var(--paper);border:1px solid var(--line);border-radius:8px}
+ol{padding-left:1.3em} li{margin:.5em 0}
+.small{font-size:.9rem;color:var(--mute)}
+input[type=range]{width:min(320px,100%);accent-color:var(--data)}
+</style>
+</head>
+<body>
+<main>
+<h1>So close, yet never equal</h1>
+<p class="lede">Fermat’s Last Theorem says that <b>x<sup>n</sup> + y<sup>n</sup> = z<sup>n</sup></b> has no whole-number solutions once n is 3 or more. It was proved in 1995. But the numbers can come astonishingly close.</p>
+
+<div class="card">
+  <div class="eq" id="hero">6³ + 8³ = 728<br>9³ = <span class="miss">729</span></div>
+  <p>Off by exactly 1. With n = 2 there are perfect matches, such as 3² + 4² = 5². For n = 3 and up, none exist.</p>
+</div>
+
+<h2>Try it yourself</h2>
+<div class="card">
+  <div class="row">
+    <label>x<input id="x" type="number" min="1" max="99999" value="9"></label>
+    <label>y<input id="y" type="number" min="1" max="99999" value="10"></label>
+    <label>power n<input id="n" type="number" min="2" max="20" value="3"></label>
+    <button class="go" id="check">Find the closest z</button>
+  </div>
+  <div class="seg">
+    <button data-p="6,8,3">6³ + 8³</button>
+    <button data-p="9,10,3">9³ + 10³ (1729)</button>
+    <button data-p="3987,4365,12">3987¹² + 4365¹²</button>
+    <button data-p="3,4,2">3² + 4²</button>
+  </div>
+  <div id="out" aria-live="polite"></div>
+</div>
+
+<h2>How close does it get as the numbers grow?</h2>
+<div class="card">
+  <div class="row">
+    <div class="seg" id="nbtn" role="group" aria-label="Power n"></div>
+  </div>
+  <div class="row">
+    <label>Largest z allowed: <b id="zv">200</b><input id="zmax" type="range" min="20" max="400" value="200"></label>
+    <div class="seg" id="mbtn" role="group" aria-label="Error type">
+      <button data-m="rel" class="on">Relative error</button>
+      <button data-m="abs">Absolute error</button>
+    </div>
+  </div>
+  <canvas id="cv" role="img" aria-label="Scatter plot of the smallest error at each z, on log scales"></canvas>
+  <p class="small">Each dot is the best miss found at that z, over every x ≤ y &lt; z. The amber line is the record so far.</p>
+  <h3 style="font:600 1.05rem Georgia,serif;margin:1em 0 .2em">Closest misses in this range</h3>
+  <ol id="top"></ol>
+</div>
+
+<h2>Why the misses get closer</h2>
+<p><b>Relative error</b> is the gap divided by the size of the numbers. It shrinks because there are more combinations to choose from. At a given z there are about z² pairs (x, y), so the best one lands within roughly 1 part in z² of the target. Even a random pair is already close, because neighbouring n-th powers are only about n/z apart in relative terms.</p>
+<p><b>Absolute error</b> tells a different story. For n = 3 the gap can stay tiny forever: for every whole number t, (9t⁴ − 3t)³ + (9t³ − 1)³ is exactly 1 less than (9t⁴)³. For n = 4 and higher, small absolute gaps almost never appear once the numbers are large.</p>
+<p>None of this means a true solution is hiding nearby. Closeness is cheap. Equality is what the theorem rules out.</p>
+</main>
+
+<script>
+(function(){
+"use strict";
+var sup={"0":"⁰","1":"¹","2":"²","3":"³","4":"⁴","5":"⁵","6":"⁶","7":"⁷","8":"⁸","9":"⁹"};
+function S(n){return String(n).split("").map(function(c){return sup[c]}).join("")}
+function fmt(b){var s=b.toString();return s.length>24?s[0]+"."+s.slice(1,4)+"×10^"+(s.length-1):s.replace(/\B(?=(\d{3})+$)/g,",")}
+function iroot(s,n){var lo=0n,hi=1n;while(hi**n<=s)hi*=2n;while(lo<hi-1n){var m=(lo+hi)/2n;if(m**n<=s)lo=m;else hi=m}return lo}
+function check(){
+  var x=BigInt(Math.max(1,Math.floor(+document.getElementById("x").value)||1)),
+      y=BigInt(Math.max(1,Math.floor(+document.getElementById("y").value)||1)),
+      n=BigInt(Math.min(20,Math.max(2,Math.floor(+document.getElementById("n").value)||2)));
+  var A=x**n+y**n,r=iroot(A,n),z=(A-r**n<=(r+1n)**n-A)?r:r+1n,B=z**n,d=A-B,ad=d<0n?-d:d,ns=S(n);
+  var o=document.getElementById("out");
+  var line=x+ns+" + "+y+ns+" = "+fmt(A)+"<br>"+z+ns+" = "+fmt(B);
+  if(ad===0n){o.innerHTML='<div class="big">'+line+'</div><p>An exact match. This is what the theorem rules out for n ≥ 3.</p>';return}
+  var rel=Number(ad)/Number(B),one=Math.round(1/rel);
+  o.innerHTML='<div class="big">'+line.replace(fmt(B),'<span class="miss">'+fmt(B)+'</span>')+'</div><p>Closest z is '+z+'. The two sides differ by <b>'+fmt(ad)+'</b>, about 1 part in <b>'+(one<1e15?one.toLocaleString("en-US"):"10"+S(Math.round(-Math.log10(rel))))+'</b>.</p>'}
+document.getElementById("check").onclick=check;
+document.querySelectorAll("[data-p]").forEach(function(b){b.onclick=function(){var p=b.dataset.p.split(",");document.getElementById("x").value=p[0];document.getElementById("y").value=p[1];document.getElementById("n").value=p[2];check()}});
+check();
+
+var cur={n:3,m:"rel"},cv=document.getElementById("cv"),zr=document.getElementById("zmax");
+var nb=document.getElementById("nbtn");
+[2,3,4,5,6].forEach(function(n){var b=document.createElement("button");b.textContent="n = "+n;b.dataset.n=n;if(n===3)b.className="on";b.onclick=function(){cur.n=n;nb.querySelectorAll("button").forEach(function(c){c.className=c===b?"on":""});run()};nb.appendChild(b)});
+document.querySelectorAll("[data-m]").forEach(function(b){b.onclick=function(){cur.m=b.dataset.m;document.querySelectorAll("[data-m]").forEach(function(c){c.className=c===b?"on":""});draw()}});
+zr.oninput=function(){document.getElementById("zv").textContent=zr.value;run()};
+function pw(a,n){var r=1;for(var i=0;i<n;i++)r*=a;return r}
+function gcd(a,b){return b?gcd(b,a%b):a}
+var data=null;
+function run(){
+  var n=cur.n,Z=+zr.value,best={},all=[],exact=0;
+  for(var x=1;x<=Z;x++){var xn=pw(x,n);for(var y=x;y<=Z;y++){var s=xn+pw(y,n),z0=Math.round(Math.pow(s,1/n));
+    for(var z=z0-1;z<=z0+1;z++){if(z<=y||z>Z)continue;var zn=pw(z,n),e=Math.abs(s-zn);
+      if(e===0){exact++;continue}
+      var rel=e/zn;if(!best[z]||e<best[z].e)best[z]={z:z,e:e,rel:rel};
+      if(gcd(gcd(x,y),z)===1)all.push({x:x,y:y,z:z,e:e,rel:rel,s:s,zn:zn})}}}
+  data={best:Object.keys(best).map(function(k){return best[k]}).sort(function(a,b){return a.z-b.z}),exact:exact,Z:Z};
+  all.sort(function(a,b){return a.rel-b.rel});
+  var ol=document.getElementById("top");ol.innerHTML="";
+  all.slice(0,5).forEach(function(t){var li=document.createElement("li");
+    li.innerHTML=t.x+S(n)+" + "+t.y+S(n)+" = "+t.s.toLocaleString("en-US")+" vs "+t.z+S(n)+" = "+t.zn.toLocaleString("en-US")+" — off by "+t.e.toLocaleString("en-US")+" (about 1 in "+Math.round(1/t.rel).toLocaleString("en-US")+")";ol.appendChild(li)});
+  if(!all.length){ol.innerHTML="<li>No near misses in this range.</li>"}
+  if(exact){var li=document.createElement("li");li.textContent="Plus "+exact+" exact solutions in range (including multiples), which only exist for n = 2.";ol.appendChild(li)}
+  draw()}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+function draw(){
+  if(!data)return;var dpr=window.devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;cv.width=w*dpr;cv.height=h*dpr;
+  var c=cv.getContext("2d");c.scale(dpr,dpr);c.clearRect(0,0,w,h);
+  var key=cur.m,pts=data.best;if(!pts.length)return;
+  var L=52,R=12,T=12,B=34,vals=pts.map(function(p){return p[key]}),lo=Math.log10(Math.min.apply(null,vals)),hi=Math.log10(Math.max.apply(null,vals));
+  lo=Math.floor(lo)-.2;hi=Math.ceil(hi)+.2;var zl=Math.log10(2),zh=Math.log10(data.Z);
+  function X(z){return L+(Math.log10(z)-zl)/(zh-zl)*(w-L-R)}function Y(v){return T+(1-(Math.log10(v)-lo)/(hi-lo))*(h-T-B)}
+  c.font="12px system-ui,sans-serif";c.fillStyle=css("--mute");c.strokeStyle=css("--line");c.lineWidth=1;
+  for(var k=Math.ceil(lo);k<=hi;k++){var yy=Y(Math.pow(10,k));c.beginPath();c.moveTo(L,yy);c.lineTo(w-R,yy);c.stroke();c.textAlign="right";c.fillText("1e"+k,L-6,yy+4)}
+  for(var zt=10;zt<=data.Z;zt*=10){var xx=X(zt);c.beginPath();c.moveTo(xx,T);c.lineTo(xx,h-B);c.stroke();c.textAlign="center";c.fillText(zt,xx,h-B+16)}
+  c.textAlign="center";c.fillText("z (log scale)",(L+w-R)/2,h-6);
+  c.fillStyle=css("--data");c.globalAlpha=.55;pts.forEach(function(p){c.beginPath();c.arc(X(p.z),Y(p[key]),2.6,0,6.3);c.fill()});c.globalAlpha=1;
+  c.strokeStyle=css("--hit");c.lineWidth=2;c.beginPath();var m=Infinity;pts.forEach(function(p,i){m=Math.min(m,p[key]);var px=X(p.z),py=Y(m);i?c.lineTo(px,py):c.moveTo(px,py)});c.stroke()}
+window.addEventListener("resize",draw);
+if(window.matchMedia)window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",draw);
+run();
+})();
+</script>
+</body>
+</html>
